@@ -29,4 +29,8 @@ export const deleteAppointment = (id) => api.delete(`/admin/appointments/${id}`)
 export const getAdminEmails = () => api.get('/admin/settings/admin-emails');
 export const updateAdminEmails = (emails) => api.put('/admin/settings/admin-emails', { emails });
 
+// Request Limit Settings
+export const getRequestLimit = () => api.get('/admin/settings/request-limit');
+export const updateRequestLimit = (data) => api.put('/admin/settings/request-limit', data);
+
 export default api;
