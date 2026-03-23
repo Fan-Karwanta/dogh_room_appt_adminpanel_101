@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Calendar, Clock, MapPin, User, Loader2, RefreshCw, CheckCircle, XCircle, Eye } from 'lucide-react';
+import { Search, Filter, Calendar, Clock, MapPin, User, Loader2, RefreshCw, CheckCircle, XCircle, Ban, Eye } from 'lucide-react';
 import { getAppointments, updateAppointment } from '../api';
 
 function AppointmentList({ filterStatus, onSelectAppointment, onRefresh }) {
@@ -56,7 +56,8 @@ function AppointmentList({ filterStatus, onSelectAppointment, onRefresh }) {
   const statusColors = {
     approved: 'bg-green-100 text-green-800 border-green-200',
     pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    declined: 'bg-red-100 text-red-800 border-red-200'
+    declined: 'bg-red-100 text-red-800 border-red-200',
+    cancelled: 'bg-orange-100 text-orange-800 border-orange-200'
   };
 
   const formatDate = (dateStr) => {
@@ -185,7 +186,7 @@ function AppointmentList({ filterStatus, onSelectAppointment, onRefresh }) {
                         >
                           <Eye size={16} />
                         </button>
-                        {appt.status !== 'approved' && (
+                        {appt.status !== 'approved' && appt.status !== 'cancelled' && (
                           <button
                             onClick={() => handleStatusChange(appt._id, 'approved')}
                             disabled={actionLoading === appt._id}
@@ -199,7 +200,7 @@ function AppointmentList({ filterStatus, onSelectAppointment, onRefresh }) {
                             )}
                           </button>
                         )}
-                        {appt.status !== 'declined' && (
+                        {appt.status !== 'declined' && appt.status !== 'cancelled' && (
                           <button
                             onClick={() => handleStatusChange(appt._id, 'declined')}
                             disabled={actionLoading === appt._id}
@@ -207,6 +208,16 @@ function AppointmentList({ filterStatus, onSelectAppointment, onRefresh }) {
                             title="Decline"
                           >
                             <XCircle size={16} />
+                          </button>
+                        )}
+                        {appt.status !== 'cancelled' && (
+                          <button
+                            onClick={() => onSelectAppointment({ ...appt, _openCancelModal: true })}
+                            disabled={actionLoading === appt._id}
+                            className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors disabled:opacity-50"
+                            title="Cancel"
+                          >
+                            <Ban size={16} />
                           </button>
                         )}
                       </div>

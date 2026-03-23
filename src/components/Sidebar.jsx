@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, CalendarDays, Clock, CheckCircle, XCircle, LogOut, Settings } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, Clock, CheckCircle, XCircle, Ban, LogOut, Settings } from 'lucide-react';
 
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -7,6 +7,7 @@ const menuItems = [
   { id: 'pending', label: 'Pending', icon: Clock },
   { id: 'approved', label: 'Approved', icon: CheckCircle },
   { id: 'declined', label: 'Declined', icon: XCircle },
+  { id: 'cancelled', label: 'Cancelled', icon: Ban },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 

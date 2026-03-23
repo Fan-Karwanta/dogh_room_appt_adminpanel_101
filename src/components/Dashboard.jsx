@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CalendarDays, Clock, CheckCircle, XCircle, Users, Building2, Loader2 } from 'lucide-react';
+import { CalendarDays, Clock, CheckCircle, XCircle, Ban, Users, Building2, Loader2 } from 'lucide-react';
 import { getDashboard } from '../api';
 
 function Dashboard({ onNavigate }) {
@@ -73,12 +73,21 @@ function Dashboard({ onNavigate }) {
       textColor: 'text-red-700',
       onClick: () => onNavigate('declined')
     },
+    {
+      label: 'Cancelled',
+      value: stats.cancelled,
+      icon: Ban,
+      color: 'bg-orange-500',
+      bgColor: 'bg-orange-50',
+      textColor: 'text-orange-700',
+      onClick: () => onNavigate('cancelled')
+    },
   ];
 
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {cards.map((card) => {
           const Icon = card.icon;
           return (

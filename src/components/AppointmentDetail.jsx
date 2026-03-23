@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { X, Calendar, Clock, User, FileText, MapPin, CheckCircle, XCircle, Loader2, Trash2, Mail } from 'lucide-react';
-import { updateAppointment, deleteAppointment } from '../api';
+import { X, Calendar, Clock, User, FileText, MapPin, CheckCircle, XCircle, Loader2, Trash2, Mail, Ban, AlertTriangle } from 'lucide-react';
+import { updateAppointment, deleteAppointment, cancelAppointment } from '../api';
 
 function AppointmentDetail({ appointment, onClose, onUpdate }) {
   const [actionLoading, setActionLoading] = useState(false);
   const [adminNotes, setAdminNotes] = useState(appointment.adminNotes || '');
+  const [showCancelForm, setShowCancelForm] = useState(appointment._openCancelModal || false);
+  const [cancellationReason, setCancellationReason] = useState('');
 
   const formatDate = (dateStr) => {
     const d = new Date(dateStr + 'T00:00:00');
@@ -21,7 +23,8 @@ function AppointmentDetail({ appointment, onClose, onUpdate }) {
   const statusColors = {
     approved: 'bg-green-100 text-green-800 border-green-200',
     pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    declined: 'bg-red-100 text-red-800 border-red-200'
+    declined: 'bg-red-100 text-red-800 border-red-200',
+    cancelled: 'bg-orange-100 text-orange-800 border-orange-200'
   };
 
   const handleAction = async (status) => {
@@ -56,6 +59,18 @@ function AppointmentDetail({ appointment, onClose, onUpdate }) {
       onUpdate();
     } catch (err) {
       alert('Failed to save notes');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleCancel = async () => {
+    try {
+      setActionLoading(true);
+      await cancelAppointment(appointment._id, { cancellationReason });
+      onUpdate();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to cancel appointment');
     } finally {
       setActionLoading(false);
     }
@@ -146,6 +161,31 @@ function AppointmentDetail({ appointment, onClose, onUpdate }) {
               <p className="text-xs text-gray-500 font-medium mb-1">Device ID</p>
               <p className="text-xs text-gray-600 font-mono break-all">{appointment.deviceId}</p>
             </div>
+
+            {/* Cancellation Info (shown for cancelled appointments) */}
+            {appointment.status === 'cancelled' && (
+              <div className="p-3 bg-orange-50 rounded-lg border border-orange-200">
+                <p className="text-xs text-orange-600 font-semibold mb-2 uppercase tracking-wider">Cancellation Details</p>
+                {appointment.previousStatus && (
+                  <div className="mb-1.5">
+                    <span className="text-xs text-gray-500">Previous Status: </span>
+                    <span className="text-xs font-medium text-gray-900 capitalize">{appointment.previousStatus}</span>
+                  </div>
+                )}
+                {appointment.cancelledAt && (
+                  <div className="mb-1.5">
+                    <span className="text-xs text-gray-500">Cancelled At: </span>
+                    <span className="text-xs font-medium text-gray-900">{formatDateTime(appointment.cancelledAt)}</span>
+                  </div>
+                )}
+                {appointment.cancellationReason && (
+                  <div>
+                    <span className="text-xs text-gray-500">Reason: </span>
+                    <span className="text-xs font-medium text-gray-900">{appointment.cancellationReason}</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Admin Notes */}
@@ -160,36 +200,83 @@ function AppointmentDetail({ appointment, onClose, onUpdate }) {
             />
           </div>
 
+          {/* Cancel Form */}
+          {showCancelForm && appointment.status !== 'cancelled' && (
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 space-y-3">
+              <div className="flex items-center gap-2 text-orange-700">
+                <AlertTriangle size={18} />
+                <p className="text-sm font-semibold">Cancel this appointment?</p>
+              </div>
+              <p className="text-xs text-orange-600">This will free up the time slot and notify the booker via email.</p>
+              <textarea
+                value={cancellationReason}
+                onChange={e => setCancellationReason(e.target.value)}
+                placeholder="Reason for cancellation (optional)..."
+                rows={2}
+                className="w-full px-3 py-2 border border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm resize-none"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={handleCancel}
+                  disabled={actionLoading}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium disabled:opacity-50"
+                >
+                  {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <Ban size={16} />}
+                  Confirm Cancellation
+                </button>
+                <button
+                  onClick={() => setShowCancelForm(false)}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+                >
+                  Back
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Action Buttons */}
-          <div className="flex flex-wrap gap-2 pt-2">
-            {appointment.status !== 'approved' && (
+          {appointment.status !== 'cancelled' && (
+            <div className="flex flex-wrap gap-2 pt-2">
+              {appointment.status !== 'approved' && (
+                <button
+                  onClick={() => handleAction('approved')}
+                  disabled={actionLoading}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium disabled:opacity-50"
+                >
+                  {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
+                  Approve
+                </button>
+              )}
+              {appointment.status !== 'declined' && (
+                <button
+                  onClick={() => handleAction('declined')}
+                  disabled={actionLoading}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium disabled:opacity-50"
+                >
+                  {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <XCircle size={16} />}
+                  Decline
+                </button>
+              )}
               <button
-                onClick={() => handleAction('approved')}
+                onClick={handleSaveNotes}
                 disabled={actionLoading}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50"
               >
-                {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
-                Approve
+                Save Notes
               </button>
-            )}
-            {appointment.status !== 'declined' && (
-              <button
-                onClick={() => handleAction('declined')}
-                disabled={actionLoading}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium disabled:opacity-50"
-              >
-                {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <XCircle size={16} />}
-                Decline
-              </button>
-            )}
+            </div>
+          )}
+
+          {appointment.status !== 'cancelled' && !showCancelForm && (
             <button
-              onClick={handleSaveNotes}
+              onClick={() => setShowCancelForm(true)}
               disabled={actionLoading}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 text-orange-600 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors text-sm font-medium disabled:opacity-50 border border-orange-200"
             >
-              Save Notes
+              <Ban size={14} />
+              Cancel Appointment
             </button>
-          </div>
+          )}
 
           <button
             onClick={handleDelete}

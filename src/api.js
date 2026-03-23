@@ -24,6 +24,7 @@ export const getDashboard = () => api.get('/admin/dashboard');
 export const getAppointments = (params) => api.get('/admin/appointments', { params });
 export const updateAppointment = (id, data) => api.patch(`/admin/appointments/${id}`, data);
 export const deleteAppointment = (id) => api.delete(`/admin/appointments/${id}`);
+export const cancelAppointment = (id, data) => api.patch(`/admin/appointments/${id}/cancel`, data);
 
 // Settings
 export const getAdminEmails = () => api.get('/admin/settings/admin-emails');

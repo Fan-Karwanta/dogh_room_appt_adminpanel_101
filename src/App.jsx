@@ -64,6 +64,7 @@ function App() {
               {currentPage === 'pending' && 'Pending Appointments'}
               {currentPage === 'approved' && 'Approved Appointments'}
               {currentPage === 'declined' && 'Declined Appointments'}
+              {currentPage === 'cancelled' && 'Cancelled Appointments'}
               {currentPage === 'settings' && 'Settings'}
             </h1>
             <button
@@ -107,6 +108,14 @@ function App() {
             <AppointmentList
               key={`declined-${refreshKey}`}
               filterStatus="declined"
+              onSelectAppointment={setSelectedAppointment}
+              onRefresh={handleRefresh}
+            />
+          )}
+          {currentPage === 'cancelled' && (
+            <AppointmentList
+              key={`cancelled-${refreshKey}`}
+              filterStatus="cancelled"
               onSelectAppointment={setSelectedAppointment}
               onRefresh={handleRefresh}
             />
